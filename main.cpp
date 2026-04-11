@@ -16,7 +16,6 @@
 #define INTERVAL_API_FETCH      600000 
 #define INTERVAL_ECONOMICS      60000  
 
-// ── STATE VARIABLES ──
 unsigned long lastSensorRead    = 0;
 unsigned long lastHealthCheck   = 0;
 
@@ -30,38 +29,35 @@ void setupWiFi() {
     Serial.println("\n[SYSTEM] WiFi Connected.");
 }
 
-// ════════════════════════════════════════════════════════════
-// 🚨 PROPRIETARY ALGORITHM SECTIONS (Redacted pending publication)
-// ════════════════════════════════════════════════════════════
+
+//  PROPRIETARY ALGORITHM SECTIONS (Redacted pending publication)
+
 
 void calculateSensorHealth() {
-    // PROPRIETARY ALGORITHM: Computes 5-layer health score. Redacted pending academic publication.
-    // Inputs: Rolling memory buffer of ADC values, extreme variance detection, and climate physical constraints.
-    // Output: Yields a Trust Weight (0.0 to 1.0) dictating AI hardware reliance.
+    // PROPRIETARY ALGORITHM: computes 5-layer health score. Redacted pending academic publication.
+    // Inputs: rolling memory buffer of ADC values, extreme variance detection, and climate physical constraints.
+    // Output: yields a Trust Weight (0.0 to 1.0) dictating AI hardware reliance
 }
 
 void calculateEvapotranspiration() {
-    // PROPRIETARY ALGORITHM: Thermodynamic VPD equation mapping. Redacted pending academic publication.
+    // PROPRIETARY ALGORITHM: Thermodynamic VPD equation mapping. Redacted pending academic publication
 }
-
 void calculateDroughtRiskIndex() {
     // PROPRIETARY ALGORITHM: Logistic Sigmoid biological desiccation physics. Redacted pending academic publication.
 }
 
 void runDecisionEngine() {
     // PROPRIETARY ALGORITHM: Dynamically interpolates health weights between physical sensors 
-    // and meteorological forecasts. Runs C++ Transpiled TinyML neural network inference.
-    // Redacted pending academic publication.
+    // and meteorological forecasts. Runs C++ Transpiled TinyML neural network inference
+    // redacted pending academic publication.
 }
-
 void processPumpQueue() {
     // PROPRIETARY ALGORITHM: Micro-pulse duty cycling queue to mitigate soil surface runoff.
-    // Redacted pending academic publication.
+    // redacted pending academic publication.
 }
 
-// ════════════════════════════════════════════════════════════
 // MAIN RTOS THREAD
-// ════════════════════════════════════════════════════════════
+
 
 void setup() {
     Serial.begin(115200);
@@ -78,7 +74,6 @@ void setup() {
     pinMode(PIN_SOIL_MOISTURE, INPUT);
     pinMode(PIN_LDR, INPUT);
     pinMode(PIN_PIR, INPUT);
-    
     setupWiFi();
     Serial.println("[SYSTEM] ✅ All systems online. Entering FreeRTOS main loop.");
 }
@@ -95,7 +90,6 @@ void loop() {
         lastSensorRead = now;
         // readAllSensors();
     }
-    
     // ── EVERY 10 SECONDS: Full Intelligence Cycle ──
     if (now - lastHealthCheck >= INTERVAL_HEALTH_CHECK) {
         lastHealthCheck = now;
@@ -103,13 +97,12 @@ void loop() {
         // Step A: Hardware Health Assessment
         calculateSensorHealth();
         
-        // Step B: Agronomy Intelligence
+        // Step B: agronomy intelligence
         calculateEvapotranspiration();
         calculateDroughtRiskIndex();
-        
-        // Step C: Decision Engine + Action
+        // Step C: decision engine + action
         runDecisionEngine();
     }
     
-    delay(INTERVAL_MAIN_LOOP); // Yield to RTOS Watchdog
+    delay(INTERVAL_MAIN_LOOP); // yield to RTOS watchdog
 }
