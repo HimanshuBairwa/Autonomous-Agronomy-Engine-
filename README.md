@@ -1,69 +1,48 @@
-<p align="center">
-  <h1 align="center">🌾 Autonomous Agronomy Engine (Edge AI for Agriculture 4.0)</h1>
-  <p align="center">
-    <strong>Fault-Tolerant, Climate-Aware, Micro-Pulse Edge Irrigation Platform</strong>
-    <br/>
-    <em>Designed for European Summer of Code (ESoC) "Embedded AI in Agriculture 4.0"</em>
-  </p>
-</p>
+# 🌾 Autonomous Agronomy Engine (Edge AI for Agriculture 4.0)
+
+> **Status:** Architecture and firmware codebase open-sourced specifically for ESoC 2026 Batch 2 (Applied Project: Embedded AI for Predictive Sensor Systems in Agriculture 4.0).
+
+This repository outlines the core architecture of a world-class, fault-tolerant edge-computing agriculture system. It transitions a standard IoT soil-moisture setup into a **predictive mathematical decision engine**. Built on the ESP32, it executes TinyML neural networks, mitigates field hardware failure via 5-layered health scoring, and directly computes thermodynamic spatial-temporal variables entirely on the edge.
 
 ---
 
-> [!WARNING]  
-> **🚨 ACADEMIC RESEARCH NOTICE 🚨**  
-> The core C++ physics engine and embedded neural network weights driving this system are currently **closed-source** as they are undergoing rigorous peer review for an upcoming academic journal publication.  
-> 
-> To protect proprietary IP, this repository serves as an architectural showcase. The files provided here outline the **FreeRTOS structure, MLOps Integration, and the Executive Telemetry Dashboard**. Stub functions are provided in place of the proprietary thermodynamic and agronomic algorithms. Once the paper is published, the full embedded source code will be made public under an open-source license.
+## 🏗️ 1. The 4 Modes of Operation (State Machine)
+The core architecture operates under four strict operational states to guarantee zero crop desiccation:
+- **MANUAL MODE**: Standard fallback. The AI is detached, and the user controls the irrigation pump manually via the web dashboard.
+- **BASIC AUTO**: The traditional "IoT" approach. Relies purely on the physical soil moisture sensor.
+- **SMART AUTO (The Core AI)**: The primary engine. Combines physical sensor data with cloud climate data (temperature, pressure, humidity) using a dynamic mathematical weighting matrix.
+- **EDGE AI PREDICTIVE (TinyML)**: Predicts the irrigation load by executing an embedded Neural Network—trained on historical spatial-temporal CSV data—directly on the ESP32 (via Edge Impulse).
 
 ---
 
-## 📖 Executive Summary
+## 🛡️ 2. The 3 Layers of Defense (Sensor Fault Tolerance)
+Agricultural machinery operates in highly volatile physical environments. If a sensor degrades, the system does not fail; it enters **SAFE MODE**. Our Anomaly Detection algorithm scores the sensor from 1.0 (perfect) to 0.0 (dead) using 5 rules:
+1. **Physical Disconnect:** Detects if the ADC hits 0 or max logic voltage.
+2. **Stuck Sensor:** Scans the 30-second rolling history buffer to see if the chemical reading is frozen.
+3. **Volatility Detection:** Flags unnatural jumps (>40% swing) indicating electrical noise.
+4. **Climate Disagreement:** If the soil reads 100% wet, but weather telemetry reads 40°C with 10% humidity, trust scores degrade gracefully.
+5. **Dual Failure Strategy:** Graceful collapse into historical extrapolation if both DHT and Soil break.
 
-Modern agriculture wastes billions of liters of water due to "dumb" timer-based irrigation and linear threshold logic. The **Autonomous Agronomy Engine** is a PhD-grade edge-computing framework deployed on the ESP32. It transcends traditional IoT by actively calculating thermodynamic physics locally and running embedded Machine Learning (TinyML) inference to predict precise crop saturation needs, neutralizing hardware anomalies, and preventing superficial runoff via micro-pulse duty cycling.
-
-![Dashboard Preview Placeholder](dashboard.png)
-*(Figure 1: The V3.0 Live Telemetry Web Dashboard, hosted entirely on the ESP32 via AsyncWebServer)*
-
----
-
-## ⚙️ The 4 Modes of Operation
-
-The state-machine architecture supports four distinct operational pipelines:
-
-1. 🕹️ **MANUAL MODE**: Secure user override bypassing all intelligence layers.
-2. 🎛️ **BASIC AUTO**: Standard physical-sensor IoT loop. Acts as an ultimate fallback if Wi-Fi and Edge Neural Networks fail.
-3. 🧠 **SMART AUTO (Agronomic Calculus)**: The core engine. Combines physical soil sensor readings with cloud climate forecasts using dynamically interpolated mathematical trust weights.
-4. 🤖 **EDGE AI PREDICTIVE**: Evaluates the localized micro-climate using a custom quantized Machine Learning model transpiled directly into raw C++ logic.
+*If `HealthScore < 0.4`, the decision engine formally shifts trust 100% to meteorological data and the SPIFFS historical trend.*
 
 ---
 
-## 🛡️ The 3 Layers of Defense (Fault Tolerance)
+## 🧠 3. The Intelligence Layer (Thermodynamic Math)
+Unlike standard `if (temp > 30)` state machines, this system relies on rigorous scientific modeling:
 
-In industrial Agriculture 4.0, hardware breaks. This framework guarantees absolute resilience via a **5-Rule Anomaly Detection** algorithm that dynamically assigns a `HealthScore` (0.0 to 1.0) to hardware metrics.
-
-If an anomaly is detected (e.g., disconnected ADC, frozen reading buffer, massive electrical volatility, or physically impossible climate disagreement), the system gracefully collapses into **SAFE MODE**. Trust weights are dynamically shifted 100% to meteorological modeling and the 7-day non-volatile SPIFFS historical trend buffer to keep crops alive without overflowing fields.
-
----
-
-## 🧬 The Intelligence Layer
-
-*(Exact mathematical formulas redacted pending publication)*
-
-1. **Vapor Pressure Deficit (VPD) Thermodynamics:** Instead of using raw temperature and humidity, the system calculates the localized VPD using thermodynamic algorithms. This models the exact atmospheric suction pulling water from crop stomata.
-2. **Logistic Sigmoid Drought Physics:** Biological crop desiccation is not linear. Our engine tracks time-since-precipitation using an S-Curve (Sigmoid) function, modeling the initial plant resistance followed by the rapid wilting phase.
-3. **FAO-56 Effective Rainfall Hydrology:** It calculates expected localized rainfall and immediately generates an offset demand score (factoring in 20% surface runoff), guaranteeing maximum rainwater utilization before the pump is even activated.
+*   **Vapor Pressure Deficit (VPD):** Evaporation is computed using the **Tetens Formula** for thermodynamic VPD, taking Temperature and Humidity to calculate exact kPa atmospheric stress.
+*   **Logistic Sigmoid Drought Physics:** Modeled via an **S-Curve** (`1 / (1 + e^(-k*(x-x0)))`). Stress is ignored for initial days, spikes violently on critical days, and asymptotes to pure desiccation.
+*   **FAO-56 Effective Rainfall Hydrology:** Predicts rain via API and calculates the **Effective Rain** (80% absorption), directly subtracting the millimeter volume from current irrigation demand.
+*   **Dynamic Interpolated Truth Weights:** `(wSensor * SoilDryness) + (wClimate * ETScore)`. Weights linearly interpolate to always sum to 1.0 based on physical hardware health.
 
 ---
 
-## 🚰 Micro-Pulse Duty Cycling
-
-Flooding desperately dry soil for 10 seconds straight results in hydrophobic surface runoff. To maximize capillary action geometry, the engine utilizes asynchronous **Pulse Duty Cycling**. Water is dispensed in micro-bursts (e.g., 2s ON, 2s OFF), allowing perfect root saturation and aggressively minimizing thousands of liters of agricultural water waste.
+## ⚙️ 4. Micro-Pulse Duty Cycling
+To prevent hydrophobic surface runoff (where water slides off dry dirt instead of sinking), the system forces **Pulse Irrigation**. The asynchronous engine turns the pump ON for 2s, OFF for 2s (capillary soak phase), overriding standard static intervals.
 
 ---
 
-## 🖥️ V3.0 Executive Dashboard
-
-The system runs a complete asynchronous UI on the edge-device itself:
-- **Glassmorphism CSS Engine:** High performance visual blur rendering.
-- **Live Telemetry:** Integrates `Chart.js` for frictionless, zero-latency scrolling data visualization directly from the edge memory state.
-- **SVG Radial Confidence Dials:** Real-time visual reporting of the hardware `HealthScore` and predictive Irrigation Demand.
+## 📊 5. Edge MLOps & Data Analytics
+*   **Local Aggregation:** The ESP32 logs thousands of points a day into 64-bit IEEE-754 accumulators, burning daily summaries into non-volatile SPIFFS flash memory.
+*   **CI/CD Pipeline Integration:** Edge-aggregated CSVs are structured for direct MLOps ingestion to retrain the Edge Impulse neural network weights dynamically without human intervention.
+Real-time visual reporting of the hardware `HealthScore` and predictive Irrigation Demand.
