@@ -2,11 +2,11 @@
 #include <WebServer.h>
 #include <ArduinoJson.h>
 
-// ── STANDARD WEB SERVER (Port 80) ──
+// ── standard web server Port 80) ──
 extern WebServer server;
 
-// ── HTML PAGE (MINIFIED CSS+JS) ──
-// V3.0: Incorporates Chart.js, SVG Circular Progress Bars, and Red-Alert Safe Mode Banner!
+// ── HTML page (minified CSS+JS) ──
+
 const char index_html[] PROGMEM = R"rawliteral(
 <!DOCTYPE HTML><html>
 <head>
